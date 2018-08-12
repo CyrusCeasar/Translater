@@ -1,14 +1,19 @@
 package cn.cyrus.translater.feater
 
-import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
+import android.support.v4.app.Fragment
 import android.text.TextUtils
+import android.util.Log
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
 import android.widget.*
 import com.youdao.sdk.ydtranslate.Translate
 import com.youdao.sdk.ydtranslate.TranslateErrorCode
 import com.youdao.sdk.ydtranslate.TranslateListener
 
-class MainActivity : AppCompatActivity() {
+class TranslateFragment : Fragment() {
+    val TAG = "TranslateFragment"
 
     var metInput: EditText? = null
     var mlvResults: ListView? = null
@@ -17,18 +22,20 @@ class MainActivity : AppCompatActivity() {
     var btnClear: Button? = null
     var btnTranslate: Button? = null
     var etInput: EditText? = null
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
-        metInput = findViewById(R.id.et_input)
-        mlvResults = findViewById(R.id.lv_results)
-        btnClear = findViewById(R.id.btn_clear)
-        btnTranslate = findViewById(R.id.btn_translate)
-        etInput = findViewById(R.id.et_input)
-        adapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, results)
+
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+        val view = inflater.inflate(R.layout.fragment_translate, null);
+
+
+        metInput = view.findViewById(R.id.et_input)
+        mlvResults = view.findViewById(R.id.lv_results)
+        btnClear = view.findViewById(R.id.btn_clear)
+        btnTranslate = view.findViewById(R.id.btn_translate)
+        etInput = view.findViewById(R.id.et_input)
+        adapter = ArrayAdapter(activity, android.R.layout.simple_list_item_1, results)
         mlvResults!!.adapter = adapter
 
-        btnClear!!.setOnClickListener{
+        btnClear!!.setOnClickListener {
             etInput!!.setText("")
         }
 
@@ -48,17 +55,28 @@ class MainActivity : AppCompatActivity() {
                             }
                         }
 
+
                         if (p0!!.getTranslations() != null && !p0!!.getTranslations().isEmpty()) {
                             for (content in p0!!.getTranslations()) {
                                 results.add(content)
                                 sb.append(content)
                             }
                         }
+
+                        val trs = sb.toString()
+                        val src = ""
+
+                        val param = "words=$input&src_content=$src&display_content=$trs"
+                        val url = "http://45.78.12.192/translate_record/query?$param"
+                        Thread {
+                            kotlin.run {
+                                Log.d(TAG, HttpUtil.get(url))
+                            }
+                        }.start()
                         notifyDataChange()
                     }
 
                     override fun onResult(p0: MutableList<Translate>?, p1: MutableList<String>?, p2: MutableList<TranslateErrorCode>?, p3: String?) {
-                        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
 
                     }
 
@@ -73,9 +91,11 @@ class MainActivity : AppCompatActivity() {
         }
 
 
+        return view
     }
-    fun notifyDataChange(){
-        runOnUiThread {
+
+    fun notifyDataChange() {
+        activity!!.runOnUiThread {
             adapter!!.notifyDataSetChanged()
         }
     }
