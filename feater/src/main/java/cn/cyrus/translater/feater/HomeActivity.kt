@@ -7,17 +7,18 @@ import android.support.v4.app.Fragment
 import android.support.v4.app.FragmentManager
 import android.support.v4.app.FragmentPagerAdapter
 import android.os.Bundle
+import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
-import android.support.v7.widget.RecyclerView.Adapter
 import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
-import android.widget.BaseAdapter
+import cn.cyrus.translater.base.*
+import com.chad.library.adapter.base.BaseQuickAdapter
+import com.chad.library.adapter.base.BaseViewHolder
 
 import kotlinx.android.synthetic.main.activity_main.*
-import kotlinx.android.synthetic.main.fragment_translate_records.view.*
 
 class HomeActivity : AppCompatActivity() {
 
@@ -50,7 +51,10 @@ class HomeActivity : AppCompatActivity() {
                     .setAction("Action", null).show()
         }
 
+
+
         fragments.add(TranslateFragment())
+        fragments.add(PlaceholderFragment.newInstance(PlaceholderFragment.TYPE_DELETED))
         mSectionsPagerAdapter!!.notifyDataSetChanged()
 
     }
@@ -98,6 +102,8 @@ class HomeActivity : AppCompatActivity() {
      * A placeholder fragment containing a simple view.
      */
     class PlaceholderFragment : Fragment() {
+        var datas: ArrayList<TranslateRecord> = ArrayList()
+        val adapter: RecordAdapter = RecordAdapter(datas)
 
         override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                                   savedInstanceState: Bundle?): View? {
@@ -105,15 +111,27 @@ class HomeActivity : AppCompatActivity() {
 
             val type = arguments?.getString(ARG_SECTION_TYPE)
 
-            val url = "http://45.78.12.191/translate_record/$type"
 
-            Thread{
-                kotlin.run {
-                    val result = HttpUtil.get(url)
-                    activity!!.runOnUiThread {
-                    }
+            var serv: TranslateRecordService = RetrofitManager.instance.create(TranslateRecordService::class.java)
+            rootView.layoutManager = LinearLayoutManager(activity,LinearLayoutManager.VERTICAL,false)
+            rootView.adapter = adapter
+
+
+            syncWrok(serv.recordList(1, 1), {
+                if (it.isResultOk()) {
+                    datas.addAll(it.data!!.asIterable())
+                    adapter.notifyDataSetChanged()
                 }
-            }.start()
+            })
+
+
+            /*  Thread{
+                  kotlin.run {
+                      val result = HttpUtil.get(url)
+                      activity!!.runOnUiThread {
+                      }
+                  }
+              }.start()*/
 
 
             return rootView
@@ -127,21 +145,31 @@ class HomeActivity : AppCompatActivity() {
              */
             private val ARG_SECTION_TYPE = "section_type"
 
-            public val TYPE_LIST= "list"
-            public val TYPE_REMBERED= "rembered"
-            public val TYPE_DELETED= "deleted_list"
+            public val TYPE_LIST = "list"
+            public val TYPE_REMBERED = "rembered"
+            public val TYPE_DELETED = "deleted_list"
 
             /**
              * Returns a new instance of this fragment for the given section
              * number.
              */
-            fun newInstance(sectionNumber: Int): PlaceholderFragment {
+            fun newInstance(sectionNumber: String): PlaceholderFragment {
                 val fragment = PlaceholderFragment()
                 val args = Bundle()
-                args.putInt(ARG_SECTION_TYPE, sectionNumber)
+                args.putString(ARG_SECTION_TYPE, sectionNumber)
                 fragment.arguments = args
                 return fragment
             }
+
+        }
+
+        class RecordAdapter(datas: List<TranslateRecord>) : BaseQuickAdapter<TranslateRecord, BaseViewHolder>(R.layout.item_words, datas) {
+            override fun convert(helper: BaseViewHolder?, item: TranslateRecord?) {
+                helper!!.setText(R.id.tv_words, item!!.words_text)
+                helper.setText(R.id.tv_display_content, item.display_content)
+                helper.setText(R.id.tv_query_num, item.quest_num.toString())
+            }
+
         }
     }
 }

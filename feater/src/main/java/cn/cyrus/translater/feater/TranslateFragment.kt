@@ -8,6 +8,9 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
+import cn.cyrus.translater.base.RetrofitManager
+import cn.cyrus.translater.base.TranslateService
+import cn.cyrus.translater.base.syncWrok
 import com.youdao.sdk.ydtranslate.Translate
 import com.youdao.sdk.ydtranslate.TranslateErrorCode
 import com.youdao.sdk.ydtranslate.TranslateListener
@@ -67,12 +70,16 @@ class TranslateFragment : Fragment() {
                         val src = ""
 
                         val param = "words=$input&src_content=$src&display_content=$trs"
-                        val url = "http://45.78.12.192/translate_record/query?$param"
-                        Thread {
-                            kotlin.run {
-                                Log.d(TAG, HttpUtil.get(url))
-                            }
-                        }.start()
+
+                        var trss: TranslateService = RetrofitManager.instance.create(TranslateService::class.java)
+                        syncWrok( trss.query(words = input, src_content = src, display_content = trs), {
+                            Log.d(TAG, "result ok"+it.isResultOk())
+                        })
+                        /* Thread {
+                             kotlin.run {
+
+                             }
+                         }.start()*/
                         notifyDataChange()
                     }
 
