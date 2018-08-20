@@ -1,6 +1,5 @@
 package cn.cyrus.translater.base
 
-import android.util.Log
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
@@ -20,7 +19,7 @@ class RetrofitManager {
 
     class HttpLogger : HttpLoggingInterceptor.Logger {
         override fun log(message: String?) {
-            Log.d("tag", message)
+            LogUtil.d("tag", message!!)
         }
 
     }

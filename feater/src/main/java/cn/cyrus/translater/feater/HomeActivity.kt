@@ -1,5 +1,6 @@
 package cn.cyrus.translater.feater
 
+import android.graphics.Rect
 import android.support.design.widget.Snackbar
 import android.support.v7.app.AppCompatActivity
 
@@ -7,6 +8,7 @@ import android.support.v4.app.Fragment
 import android.support.v4.app.FragmentManager
 import android.support.v4.app.FragmentPagerAdapter
 import android.os.Bundle
+import android.support.v4.widget.SwipeRefreshLayout
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
@@ -104,23 +106,57 @@ class HomeActivity : AppCompatActivity() {
     class PlaceholderFragment : Fragment() {
         var datas: ArrayList<TranslateRecord> = ArrayList()
         val adapter: RecordAdapter = RecordAdapter(datas)
+        var page:Int = 1
 
         override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                                   savedInstanceState: Bundle?): View? {
-            val rootView = inflater.inflate(R.layout.fragment_translate_records, container, false) as RecyclerView
+            val rootView = inflater.inflate(R.layout.fragment_translate_records, container, false) as SwipeRefreshLayout
 
+            val rc:RecyclerView = rootView.findViewById(R.id.rc)
             val type = arguments?.getString(ARG_SECTION_TYPE)
 
 
             var serv: TranslateRecordService = RetrofitManager.instance.create(TranslateRecordService::class.java)
-            rootView.layoutManager = LinearLayoutManager(activity,LinearLayoutManager.VERTICAL,false)
-            rootView.adapter = adapter
+            rc.layoutManager = LinearLayoutManager(activity,LinearLayoutManager.VERTICAL,false)
+            rc.adapter = adapter
+            adapter.setOnLoadMoreListener({
+                syncWrok(serv.recordList(1, page), {
+                    if (it.isResultOk()) {
+                        datas.addAll(it.data!!.asIterable())
+                        adapter.notifyDataSetChanged()
+                        page++
+                        adapter.loadMoreComplete()
+                    }else{
+                        adapter.loadMoreFail()
+                    }
+                })
 
+            },rc)
 
-            syncWrok(serv.recordList(1, 1), {
+            rootView.setOnRefreshListener {
+                page=0
+                syncWrok(serv.recordList(1, page), {
+                    if (it.isResultOk()) {
+                        datas.clear()
+                        datas.addAll(it.data!!.asIterable())
+                        adapter.notifyDataSetChanged()
+                        page++
+                    }else{
+                        adapter.loadMoreFail()
+                    }
+                    if(rootView.isRefreshing)
+                        rootView.isRefreshing = false
+                })
+            }
+
+            syncWrok(serv.recordList(1, page), {
                 if (it.isResultOk()) {
                     datas.addAll(it.data!!.asIterable())
                     adapter.notifyDataSetChanged()
+                    page++
+                    adapter.loadMoreComplete()
+                }else{
+                    adapter.loadMoreFail()
                 }
             })
 
