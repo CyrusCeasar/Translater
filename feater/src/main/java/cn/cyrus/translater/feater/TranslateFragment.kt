@@ -1,13 +1,14 @@
 package cn.cyrus.translater.feater
 
-import android.os.Bundle
-import android.support.v4.app.Fragment
 import android.text.TextUtils
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
-import android.widget.*
+import android.widget.ArrayAdapter
+import android.widget.Button
+import android.widget.EditText
+import android.widget.ListView
+import cn.cyrus.translater.base.BaseLazyInitFragment
 import cn.cyrus.translater.base.RetrofitManager
 import cn.cyrus.translater.base.TranslateService
 import cn.cyrus.translater.base.syncWrok
@@ -15,8 +16,10 @@ import com.youdao.sdk.ydtranslate.Translate
 import com.youdao.sdk.ydtranslate.TranslateErrorCode
 import com.youdao.sdk.ydtranslate.TranslateListener
 
-class TranslateFragment : Fragment() {
-    val TAG = "TranslateFragment"
+class TranslateFragment : BaseLazyInitFragment() {
+
+
+    val TAG = TranslateFragment::class.java.simpleName
 
     var metInput: EditText? = null
     var mlvResults: ListView? = null
@@ -26,10 +29,8 @@ class TranslateFragment : Fragment() {
     var btnTranslate: Button? = null
     var etInput: EditText? = null
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        val view = inflater.inflate(R.layout.fragment_translate, null);
-
-
+    override fun initView(layoutInflater: LayoutInflater): View? {
+        val view = layoutInflater.inflate(R.layout.fragment_translate, null)
         metInput = view.findViewById(R.id.et_input)
         mlvResults = view.findViewById(R.id.lv_results)
         btnClear = view.findViewById(R.id.btn_clear)
@@ -72,14 +73,9 @@ class TranslateFragment : Fragment() {
                         val param = "words=$input&src_content=$src&display_content=$trs"
 
                         var trss: TranslateService = RetrofitManager.instance.create(TranslateService::class.java)
-                        syncWrok( trss.query(words = input, src_content = src, display_content = trs), {
-                            Log.d(TAG, "result ok"+it.isResultOk())
+                        syncWrok(trss.query(words = input, src_content = src, display_content = trs), {
+                            Log.d(TAG, "result ok" + it.isResultOk())
                         })
-                        /* Thread {
-                             kotlin.run {
-
-                             }
-                         }.start()*/
                         notifyDataChange()
                     }
 
@@ -96,10 +92,9 @@ class TranslateFragment : Fragment() {
                 })
             }
         }
-
-
         return view
     }
+
 
     fun notifyDataChange() {
         activity!!.runOnUiThread {

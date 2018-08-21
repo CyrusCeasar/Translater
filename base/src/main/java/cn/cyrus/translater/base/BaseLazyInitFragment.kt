@@ -22,7 +22,7 @@ abstract class BaseLazyInitFragment : Fragment() {
     protected var isPrepared = false
     protected var isVesible = false
 
-    protected var mRootView: ViewGroup? = null
+    private var mRootView: ViewGroup? = null
      var onInitFinished: (() -> Unit)? =null
 
 
@@ -33,9 +33,8 @@ abstract class BaseLazyInitFragment : Fragment() {
                 init()
             }
         }
-        val parentGroup = mRootView!!.getParent() as ViewGroup
-        if (parentGroup != null) {
-            parentGroup!!.removeAllViews()
+        if ( mRootView!!.getParent()  != null) {
+            (mRootView as ViewGroup).removeAllViews()
         }
         return mRootView
     }

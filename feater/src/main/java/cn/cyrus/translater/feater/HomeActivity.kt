@@ -1,6 +1,5 @@
 package cn.cyrus.translater.feater
 
-import android.graphics.Rect
 import android.support.design.widget.Snackbar
 import android.support.v7.app.AppCompatActivity
 
@@ -8,17 +7,8 @@ import android.support.v4.app.Fragment
 import android.support.v4.app.FragmentManager
 import android.support.v4.app.FragmentPagerAdapter
 import android.os.Bundle
-import android.support.v4.widget.SwipeRefreshLayout
-import android.support.v7.widget.LinearLayoutManager
-import android.support.v7.widget.RecyclerView
-import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuItem
-import android.view.View
-import android.view.ViewGroup
-import cn.cyrus.translater.base.*
-import com.chad.library.adapter.base.BaseQuickAdapter
-import com.chad.library.adapter.base.BaseViewHolder
 
 import kotlinx.android.synthetic.main.activity_main.*
 
@@ -56,7 +46,7 @@ class HomeActivity : AppCompatActivity() {
 
 
         fragments.add(TranslateFragment())
-        fragments.add(PlaceholderFragment.newInstance(PlaceholderFragment.TYPE_DELETED))
+        fragments.add(RecordListFragment.newInstance(RecordListFragment.TYPE_DELETED))
         mSectionsPagerAdapter!!.notifyDataSetChanged()
 
     }
@@ -90,7 +80,7 @@ class HomeActivity : AppCompatActivity() {
 
         override fun getItem(position: Int): Fragment {
             // getItem is called to instantiate the fragment for the given page.
-            // Return a PlaceholderFragment (defined as a static inner class below).
+            // Return a RecordListFragment (defined as a static inner class below).
             return fragments[position]
         }
 
@@ -100,112 +90,5 @@ class HomeActivity : AppCompatActivity() {
         }
     }
 
-    /**
-     * A placeholder fragment containing a simple view.
-     */
-    class PlaceholderFragment : Fragment() {
-        var datas: ArrayList<TranslateRecord> = ArrayList()
-        val adapter: RecordAdapter = RecordAdapter(datas)
-        var page:Int = 1
 
-        override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
-                                  savedInstanceState: Bundle?): View? {
-            val rootView = inflater.inflate(R.layout.fragment_translate_records, container, false) as SwipeRefreshLayout
-
-            val rc:RecyclerView = rootView.findViewById(R.id.rc)
-            val type = arguments?.getString(ARG_SECTION_TYPE)
-
-
-            var serv: TranslateRecordService = RetrofitManager.instance.create(TranslateRecordService::class.java)
-            rc.layoutManager = LinearLayoutManager(activity,LinearLayoutManager.VERTICAL,false)
-            rc.adapter = adapter
-            adapter.setOnLoadMoreListener({
-                syncWrok(serv.recordList(1, page), {
-                    if (it.isResultOk()) {
-                        datas.addAll(it.data!!.asIterable())
-                        adapter.notifyDataSetChanged()
-                        page++
-                        adapter.loadMoreComplete()
-                    }else{
-                        adapter.loadMoreFail()
-                    }
-                })
-
-            },rc)
-
-            rootView.setOnRefreshListener {
-                page=0
-                syncWrok(serv.recordList(1, page), {
-                    if (it.isResultOk()) {
-                        datas.clear()
-                        datas.addAll(it.data!!.asIterable())
-                        adapter.notifyDataSetChanged()
-                        page++
-                    }else{
-                        adapter.loadMoreFail()
-                    }
-                    if(rootView.isRefreshing)
-                        rootView.isRefreshing = false
-                })
-            }
-
-            syncWrok(serv.recordList(1, page), {
-                if (it.isResultOk()) {
-                    datas.addAll(it.data!!.asIterable())
-                    adapter.notifyDataSetChanged()
-                    page++
-                    adapter.loadMoreComplete()
-                }else{
-                    adapter.loadMoreFail()
-                }
-            })
-
-
-            /*  Thread{
-                  kotlin.run {
-                      val result = HttpUtil.get(url)
-                      activity!!.runOnUiThread {
-                      }
-                  }
-              }.start()*/
-
-
-            return rootView
-        }
-
-
-        companion object {
-            /**
-             * The fragment argument representing the section number for this
-             * fragment.
-             */
-            private val ARG_SECTION_TYPE = "section_type"
-
-            public val TYPE_LIST = "list"
-            public val TYPE_REMBERED = "rembered"
-            public val TYPE_DELETED = "deleted_list"
-
-            /**
-             * Returns a new instance of this fragment for the given section
-             * number.
-             */
-            fun newInstance(sectionNumber: String): PlaceholderFragment {
-                val fragment = PlaceholderFragment()
-                val args = Bundle()
-                args.putString(ARG_SECTION_TYPE, sectionNumber)
-                fragment.arguments = args
-                return fragment
-            }
-
-        }
-
-        class RecordAdapter(datas: List<TranslateRecord>) : BaseQuickAdapter<TranslateRecord, BaseViewHolder>(R.layout.item_words, datas) {
-            override fun convert(helper: BaseViewHolder?, item: TranslateRecord?) {
-                helper!!.setText(R.id.tv_words, item!!.words_text)
-                helper.setText(R.id.tv_display_content, item.display_content)
-                helper.setText(R.id.tv_query_num, item.quest_num.toString())
-            }
-
-        }
-    }
 }
