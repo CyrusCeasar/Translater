@@ -8,10 +8,7 @@ import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ListView
-import cn.cyrus.translater.base.BaseLazyInitFragment
-import cn.cyrus.translater.base.RetrofitManager
-import cn.cyrus.translater.base.TranslateService
-import cn.cyrus.translater.base.syncWrok
+import cn.cyrus.translater.base.*
 import com.youdao.sdk.ydtranslate.Translate
 import com.youdao.sdk.ydtranslate.TranslateErrorCode
 import com.youdao.sdk.ydtranslate.TranslateListener
@@ -21,13 +18,13 @@ class TranslateFragment : BaseLazyInitFragment() {
 
     val TAG = TranslateFragment::class.java.simpleName
 
-    var metInput: EditText? = null
-    var mlvResults: ListView? = null
+    lateinit var metInput: EditText
+    lateinit var mlvResults: ListView
     val results: ArrayList<String> = ArrayList()
-    var adapter: ArrayAdapter<String>? = null
-    var btnClear: Button? = null
-    var btnTranslate: Button? = null
-    var etInput: EditText? = null
+    lateinit var adapter: ArrayAdapter<String>
+    lateinit var btnClear: Button
+    lateinit var btnTranslate: Button
+    lateinit var etInput: EditText
 
     override fun initView(layoutInflater: LayoutInflater): View? {
         val view = layoutInflater.inflate(R.layout.fragment_translate, null)
@@ -37,31 +34,31 @@ class TranslateFragment : BaseLazyInitFragment() {
         btnTranslate = view.findViewById(R.id.btn_translate)
         etInput = view.findViewById(R.id.et_input)
         adapter = ArrayAdapter(activity, android.R.layout.simple_list_item_1, results)
-        mlvResults!!.adapter = adapter
+        mlvResults.adapter = adapter
 
-        btnClear!!.setOnClickListener {
-            etInput!!.setText("")
+        btnClear.setOnClickListener {
+            etInput.setText("")
         }
 
-        btnTranslate!!.setOnClickListener {
-            val input: String = etInput!!.text.toString()
+        btnTranslate.setOnClickListener {
+            val input: String = etInput.text.toString()
             if (TextUtils.isEmpty(input)) {
             } else {
                 TranslateUtil.translate(input, object : TranslateListener {
-                    override fun onResult(p0: Translate?, p1: String?, p2: String?) {
+                    override fun onResult(p0: Translate, p1: String?, p2: String?) {
                         results.clear()
                         val sb = StringBuilder()
 
-                        if (p0!!.getExplains() != null && !p0!!.getExplains().isEmpty()) {
-                            for (content in p0!!.getExplains()) {
+
+                        if (p0.getExplains() != null && !p0.getExplains().isEmpty()) {
+                            for (content in p0.getExplains()) {
                                 results.add(content)
                                 sb.append(content)
                             }
                         }
 
-
-                        if (p0!!.getTranslations() != null && !p0!!.getTranslations().isEmpty()) {
-                            for (content in p0!!.getTranslations()) {
+                        if (p0.getTranslations() != null && !p0.getTranslations().isEmpty()) {
+                            for (content in p0.getTranslations()) {
                                 results.add(content)
                                 sb.append(content)
                             }
@@ -80,7 +77,7 @@ class TranslateFragment : BaseLazyInitFragment() {
                     }
 
                     override fun onResult(p0: MutableList<Translate>?, p1: MutableList<String>?, p2: MutableList<TranslateErrorCode>?, p3: String?) {
-
+                        LogUtil.d(TAG,p1!!.toString())
                     }
 
                     override fun onError(p0: TranslateErrorCode?, p1: String?) {
@@ -98,7 +95,7 @@ class TranslateFragment : BaseLazyInitFragment() {
 
     fun notifyDataChange() {
         activity!!.runOnUiThread {
-            adapter!!.notifyDataSetChanged()
+            adapter.notifyDataSetChanged()
         }
     }
 }

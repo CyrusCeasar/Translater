@@ -1,12 +1,14 @@
 package cn.cyrus.translater.feater
 
-import android.app.Application
+import cn.cyrus.translater.base.BaseApplication
 import com.youdao.sdk.app.YouDaoApplication
 
-class TranslaterApplication: Application() {
+class TranslaterApplication: BaseApplication() {
+
 
     override fun onCreate() {
         super.onCreate()
+
         YouDaoApplication.init(this, TranslateUtil.APP_KEY)
     }
 }
