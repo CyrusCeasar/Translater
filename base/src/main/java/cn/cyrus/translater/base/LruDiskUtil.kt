@@ -2,10 +2,10 @@ package cn.cyrus.translater.base
 
 import com.jakewharton.disklrucache.DiskLruCache
 import io.reactivex.Observable
-import io.reactivex.Scheduler
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import java.io.File
+import java.io.InputStream
 import java.io.OutputStream
 import java.security.MessageDigest
 import java.security.NoSuchAlgorithmException
@@ -32,11 +32,13 @@ class LruDiskUtil {
         fun save(key: String, datas: ByteArray, callBack: (() -> Unit)? = null) {
             if (datas.isEmpty())
                 return
+            LogUtil.d(String(datas))
             Observable.create<Any> {
-                val editor: DiskLruCache.Editor = LruDiskUtil.CACHE.edit(key)
+                val editor: DiskLruCache.Editor = LruDiskUtil.CACHE.edit(hashKeyForDisk(key))
                 val ops: OutputStream = editor.newOutputStream(0)
-                ops.write(datas)
+                ops.write(datas,0,datas.size)
                 editor.commit()
+                ops.close()
                 CACHE.flush()
             }.observeOn(Schedulers.io()).subscribeOn(AndroidSchedulers.mainThread()).subscribe {
                 callBack?.invoke()
@@ -44,10 +46,24 @@ class LruDiskUtil {
         }
 
         fun get(key:String,callBack:(ByteArray?)->Unit){
-            Observable.create<ByteArray> {
-                val snapshot = CACHE.get(key)
+            Observable.create<ByteArray?> {
+                var snapshot:DiskLruCache.Snapshot? = CACHE.get(hashKeyForDisk(key))
+                if(snapshot != null){
+                    val inp:InputStream = snapshot.getInputStream(0)
+                    if(inp.available() == 0){
+                        it.onNext(ByteArray(0))
+                    }else {
+                        val datas = inp.readBytes(inp.available())
+                        LogUtil.d(String(datas,0,datas.size))
+                        it.onNext(datas)
+                    }
+                    inp.close()
+                }else{
+                    it.onNext(ByteArray(0))
+                }
+
             }.observeOn(Schedulers.io()).subscribeOn(AndroidSchedulers.mainThread()).subscribe {
-                callBack?.invoke()
+                callBack.invoke(it)
             }
         }
 

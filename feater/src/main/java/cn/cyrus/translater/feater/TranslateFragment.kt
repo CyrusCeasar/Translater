@@ -1,31 +1,59 @@
 package cn.cyrus.translater.feater
 
+import android.annotation.SuppressLint
 import android.text.TextUtils
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
-import android.widget.ArrayAdapter
-import android.widget.Button
-import android.widget.EditText
-import android.widget.ListView
+import android.widget.*
 import cn.cyrus.translater.base.*
+import com.google.gson.Gson
 import com.youdao.sdk.ydtranslate.Translate
-import com.youdao.sdk.ydtranslate.TranslateErrorCode
-import com.youdao.sdk.ydtranslate.TranslateListener
 
 class TranslateFragment : BaseLazyInitFragment() {
 
 
-    val TAG = TranslateFragment::class.java.simpleName
+    val TAG = TranslateFragment::class.java.simpleName!!
 
     lateinit var metInput: EditText
     lateinit var mlvResults: ListView
-    val results: ArrayList<String> = ArrayList()
+    private val results: ArrayList<String> = ArrayList()
     lateinit var adapter: ArrayAdapter<String>
     lateinit var btnClear: Button
     lateinit var btnTranslate: Button
     lateinit var etInput: EditText
 
+   private val callback:(Translate, String)->Unit = { p0, p1 ->
+        results.clear()
+        val sb = StringBuilder()
+
+        if (p0.explains != null && !p0.explains.isEmpty()) {
+            for (content in p0.explains) {
+                results.add(content)
+                sb.append(content)
+            }
+        }
+
+        if (p0.translations != null && !p0.translations.isEmpty()) {
+            for (content in p0.translations) {
+                results.add(content)
+                sb.append(content)
+            }
+        }
+
+
+       val jsonStr = Gson().toJson(p0, Translate::class.java)
+       LogUtil.json(jsonStr)
+        LruDiskUtil.save(p1,jsonStr.toByteArray())//把数据缓存到本地
+
+       val trs = sb.toString()
+       val src = jsonStr
+       val trss: TranslateService = RetrofitManager.instance.create(TranslateService::class.java)
+       syncWrok(trss.query(words = p1, src_content = src, display_content = trs)) {
+            Log.d(TAG, "result ok" + it.isResultOk())
+        }
+        notifyDataChange()
+    }
     override fun initView(layoutInflater: LayoutInflater): View? {
         val view = layoutInflater.inflate(R.layout.fragment_translate, null)
         metInput = view.findViewById(R.id.et_input)
@@ -40,53 +68,26 @@ class TranslateFragment : BaseLazyInitFragment() {
             etInput.setText("")
         }
 
-        btnTranslate.setOnClickListener {
+        btnTranslate.setOnClickListener { _ ->
             val input: String = etInput.text.toString()
             if (TextUtils.isEmpty(input)) {
+                showToast(context!!, "内容不能为空!")
             } else {
-                TranslateUtil.translate(input, object : TranslateListener {
-                    override fun onResult(p0: Translate, p1: String?, p2: String?) {
-                        results.clear()
-                        val sb = StringBuilder()
-
-
-                        if (p0.getExplains() != null && !p0.getExplains().isEmpty()) {
-                            for (content in p0.getExplains()) {
-                                results.add(content)
-                                sb.append(content)
-                            }
+                LruDiskUtil.get(input) {
+                    if (it == null || it.isEmpty()) {
+                        TranslateUtil.translate(input, callback ) { p0, _ ->
+                            results.clear()
+                            results.add(p0.toString())
+                            notifyDataChange()
                         }
-
-                        if (p0.getTranslations() != null && !p0.getTranslations().isEmpty()) {
-                            for (content in p0.getTranslations()) {
-                                results.add(content)
-                                sb.append(content)
-                            }
-                        }
-
-                        val trs = sb.toString()
-                        val src = ""
-
-                        val param = "words=$input&src_content=$src&display_content=$trs"
-
-                        var trss: TranslateService = RetrofitManager.instance.create(TranslateService::class.java)
-                        syncWrok(trss.query(words = input, src_content = src, display_content = trs), {
-                            Log.d(TAG, "result ok" + it.isResultOk())
-                        })
-                        notifyDataChange()
+                    } else {
+                        val trans:Translate = Gson().fromJson(String(it,0,it.size),Translate::class.java)
+                        callback.invoke(trans,input)
                     }
+                }
 
-                    override fun onResult(p0: MutableList<Translate>?, p1: MutableList<String>?, p2: MutableList<TranslateErrorCode>?, p3: String?) {
-                        LogUtil.d(TAG,p1!!.toString())
-                    }
 
-                    override fun onError(p0: TranslateErrorCode?, p1: String?) {
-                        results.clear()
-                        results.add(p0.toString())
-                        notifyDataChange()
-                    }
 
-                })
             }
         }
         return view

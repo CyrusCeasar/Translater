@@ -21,8 +21,8 @@ class LogUtil {
         init {
             val formatStrategy = PrettyFormatStrategy.newBuilder()
                     .showThreadInfo(false)  // (Optional) Whether to show thread info or not. Default true
-                    .methodCount(0)         // (Optional) How many method line to show. Default 2
-                    .methodOffset(7)        // (Optional) Hides internal method calls up to offset. Default 5
+                    .methodCount(5)         // (Optional) How many method line to show. Default 2
+                    .methodOffset(0)        // (Optional) Hides internal method calls up to offset. Default 5
                     .tag(TAG)   // (Optional) Global tag for every log. Default PRETTY_LOGGER
                     .build()
 
@@ -33,31 +33,31 @@ class LogUtil {
                 }
             })
         }
-        fun i(tag: String = TAG, content: String) {
+        fun i(content: String,tag: String = TAG) {
             Logger.t(tag).i(content)
         }
 
 
-        fun d(tag: String = TAG, content: String) {
-            Logger.t(TAG).d(content)
+        fun d( content: String,tag: String = TAG) {
+            Logger.t(tag).d(content)
         }
 
 
-        fun e(tag: String = TAG, content: String) {
-            Logger.t(TAG).e(content)
+        fun e( content: String,tag: String = TAG) {
+            Logger.t(tag).e(content)
         }
 
 
-        fun w(tag: String = TAG, content: String) {
-            Logger.t(TAG).w(content)
+        fun w( content: String,tag: String = TAG) {
+            Logger.t(tag).w(content)
         }
 
-        fun json(tag: String = TAG, content: String) {
-            Logger.t(TAG).json(content)
+        fun json( content: String,tag: String = TAG) {
+            Logger.t(tag).json(content)
         }
 
-        fun xml(tag: String = TAG, content: String) {
-            Logger.t(TAG).xml(content)
+        fun xml( content: String,tag: String = TAG) {
+            Logger.t(tag).xml(content)
         }
     }
 
