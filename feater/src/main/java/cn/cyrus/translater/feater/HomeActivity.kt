@@ -46,7 +46,8 @@ class HomeActivity : AppCompatActivity() {
 
 
         fragments.add(TranslateFragment())
-        fragments.add(RecordListFragment.newInstance(RecordListFragment.TYPE_DELETED))
+        fragments.add(RecordListFragment.newInstance(RecordListFragment.TYPE_QUERY_NUM_ASC))
+        fragments.add(RecordListFragment.newInstance(RecordListFragment.TYPE_TIME_DESC))
         mSectionsPagerAdapter!!.notifyDataSetChanged()
 
     }

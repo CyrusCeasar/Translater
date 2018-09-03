@@ -19,7 +19,7 @@ class RetrofitManager {
 
     class HttpLogger : HttpLoggingInterceptor.Logger {
         override fun log(message: String?) {
-            LogUtil.d("tag", message!!)
+            LogUtil.d( message!!)
         }
 
     }

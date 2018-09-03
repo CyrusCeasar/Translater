@@ -11,4 +11,9 @@ interface TranslateRecordService {
 
     @GET("translate_record/list")
     fun recordList(@Query("type") type:Int, @Query("page") page:Int):Observable<Result<ArrayList<TranslateRecord>>>
+
+    @GET("translate_record/delete")
+    fun delete(@Query("words") words:String):Observable<Result<Int>>
+
+
 }
