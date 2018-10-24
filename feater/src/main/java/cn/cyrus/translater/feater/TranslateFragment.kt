@@ -1,6 +1,5 @@
 package cn.cyrus.translater.feater
 
-import android.annotation.SuppressLint
 import android.text.TextUtils
 import android.util.Log
 import android.view.LayoutInflater
@@ -22,11 +21,16 @@ class TranslateFragment : BaseLazyInitFragment() {
     lateinit var btnClear: Button
     lateinit var btnTranslate: Button
     lateinit var etInput: EditText
+    lateinit var mAudioManager: AudioManager
 
    private val callback:(Translate, String)->Unit = { p0, p1 ->
         results.clear()
         val sb = StringBuilder()
 
+       val phoneticStr= "uk:"+p0.ukPhonetic
+
+       results.add(p0.ukSpeakUrl)
+       results.add(phoneticStr)
         if (p0.explains != null && !p0.explains.isEmpty()) {
             for (content in p0.explains) {
                 results.add(content)
@@ -67,6 +71,14 @@ class TranslateFragment : BaseLazyInitFragment() {
         btnClear.setOnClickListener {
             etInput.setText("")
         }
+        
+        mlvResults.onItemClickListener = AdapterView.OnItemClickListener { parent, view, position, id ->
+            if(position == 0 && results[position].contains("http:")){
+                mAudioManager.play(results[0])
+            }
+        }
+
+        mAudioManager = AudioManager()
 
         btnTranslate.setOnClickListener { _ ->
             val input: String = etInput.text.toString()
