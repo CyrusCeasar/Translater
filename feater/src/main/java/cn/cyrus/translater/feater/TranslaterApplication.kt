@@ -9,6 +9,6 @@ class TranslaterApplication: BaseApplication() {
     override fun onCreate() {
         super.onCreate()
 
-        YouDaoApplication.init(this, TranslateUtil.APP_KEY)
+//        YouDaoApplication.init(this, TranslateUtil.APP_KEY)
     }
 }

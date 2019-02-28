@@ -13,7 +13,8 @@
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
 
-    <application android:name=".TranslaterApplication">
+    <application android:name=".TranslaterApplication"
+        android:networkSecurityConfig="@xml/network_security_config">
          <!--   <intent-filter android:order="1">
                 <action android:name="android.intent.action.VIEW" />
 
